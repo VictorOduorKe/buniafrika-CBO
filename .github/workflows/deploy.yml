@@ -41,15 +41,15 @@ jobs:
         run: |
           echo "=== Security Check: Secrets Isolation ==="
           # Ensure no .env or sensitive secrets file was committed into the frontend or backend application
-          if find buniafrika/ -name ".env*" | grep -q .; then
-            echo "ERROR: Found .env file inside buniafrika/ directory! Sensitive files must reside outside web roots on the host server."
-            find buniafrika/ -name ".env*"
+          if find buniafrika/ -name ".env*" -o -name "*buniafrika.env*" | grep -q .; then
+            echo "ERROR: Found .env or buniafrika.env file inside buniafrika/ directory! Sensitive files must reside outside web roots on the host server."
+            find buniafrika/ -name ".env*" -o -name "*buniafrika.env*"
             exit 1
           fi
 
-          # Ensure no production .env file exists in repository root
+          # Ensure no production .env or buniafrika.env file exists in repository root
           if [ -f ".env" ] || [ -f "buniafrika.env" ]; then
-            echo "ERROR: Found .env file in repository root! Production secrets must remain on the host server and never be committed to Git."
+            echo "ERROR: Found environment file in repository root! Production secrets must remain on the host server and never be committed to Git."
             exit 1
           fi
 
@@ -87,6 +87,12 @@ jobs:
           SMTP_FROM=ci@buniafrika.co.ke
           EOF
           chmod 600 secrets/buniafrika.env
+
+          # Create dummy foreign environment files to verify cross-application isolation
+          echo "DB_NAME=foreign_portfolio_db" > secrets/portfolio.env
+          echo "DB_NAME=foreign_beekay_db" > secrets/beekay.env
+          echo "DB_NAME=foreign_shared_env_db" > secrets/.env
+
           echo "Temporary CI environment configuration created successfully."
 
       - name: Verify Environment Loader & Backend Dependencies
@@ -103,7 +109,7 @@ jobs:
                 exit(1);
             }
             if ($_ENV["DB_NAME"] !== "ci_dummy_buniafrika") {
-                echo "FAIL: Unexpected DB_NAME: " . $_ENV["DB_NAME"] . "\n";
+                echo "FAIL: Unexpected DB_NAME: " . $_ENV["DB_NAME"] . " (cross-application contamination!)\n";
                 exit(1);
             }
             echo "SUCCESS: Bootstrap loaded DB_NAME: " . $_ENV["DB_NAME"] . "\n";
@@ -127,6 +133,33 @@ jobs:
                 exit(1);
             }
             echo "SUCCESS: Frontend bridge resolved DB_NAME: " . $_ENV["DB_NAME"] . "\n";
+          '
+
+      - name: Verify Foreign Environment Isolation
+        run: |
+          echo "=== Testing Foreign Environment Isolation ==="
+          php -r '
+            $tempDir = sys_get_temp_dir() . "/ci_isolation_" . uniqid();
+            mkdir($tempDir . "/secrets", 0755, true);
+            mkdir($tempDir . "/buniafrika", 0755, true);
+            exec("cp -r buniafrika/buniafrika.co.ke " . escapeshellarg($tempDir . "/buniafrika/"));
+
+            // Put only foreign files in secrets (no buniafrika.env)
+            file_put_contents($tempDir . "/secrets/portfolio.env", "DB_NAME=foreign_portfolio_db\nBACKEND_API_URL=https://test\n");
+            file_put_contents($tempDir . "/secrets/beekay.env", "DB_NAME=foreign_beekay_db\nBACKEND_API_URL=https://test\n");
+            file_put_contents($tempDir . "/secrets/.env", "DB_NAME=foreign_generic_db\nBACKEND_API_URL=https://test\n");
+
+            // Execute bootstrap in isolated subprocess
+            $cmd = "php -r \"require_once '\''" . $tempDir . "/buniafrika/buniafrika.co.ke/includes/bootstrap.php'\'';\" 2>&1";
+            exec($cmd, $output, $code);
+
+            exec("rm -rf " . escapeshellarg($tempDir));
+
+            if ($code === 0) {
+                echo "FAIL: Bootstrap should have failed when buniafrika.env is missing, but succeeded by loading foreign config!\n";
+                exit(1);
+            }
+            echo "SUCCESS: Bootstrap strictly refused to fall back to foreign environment files.\n";
           '
 
       - name: Cleanup Temporary CI Environment
@@ -231,6 +264,8 @@ jobs:
             --exclude 'node_modules' \
             --exclude 'secrets' \
             --exclude 'secrets/**' \
+            --exclude '.env' \
+            --exclude '.env.*' \
             --exclude '.env*' \
             --exclude '*.env*' \
             --exclude 'buniafrika.env' \
