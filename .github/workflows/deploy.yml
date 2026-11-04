@@ -35,24 +35,25 @@ jobs:
           echo "=== Verifying Target Directory Structure ==="
           test -d "buniafrika/buniafrika" || { echo "ERROR: Frontend directory buniafrika/buniafrika missing!"; exit 1; }
           test -d "buniafrika/buniafrika.co.ke" || { echo "ERROR: Backend directory buniafrika/buniafrika.co.ke missing!"; exit 1; }
-          test -d "secrets" || { echo "ERROR: Secrets directory secrets/ missing!"; exit 1; }
-          echo "Directory structure verified successfully."
+          echo "Target directory structure verified successfully."
 
       - name: Security Check - Ensure No Secrets in Web Roots
         run: |
           echo "=== Security Check: Secrets Isolation ==="
-          # Ensure no .env file exists in frontend or backend
+          # Ensure no .env or sensitive secrets file was committed into the frontend or backend application
           if find buniafrika/ -name ".env*" | grep -q .; then
-            echo "ERROR: Found .env file inside buniafrika/ directory! Sensitive files must reside only in secrets/"
+            echo "ERROR: Found .env file inside buniafrika/ directory! Sensitive files must reside outside web roots on the host server."
             find buniafrika/ -name ".env*"
             exit 1
           fi
 
-          # Ensure secrets directory is protected with .htaccess
-          test -f "secrets/.htaccess" || { echo "ERROR: secrets/.htaccess is missing!"; exit 1; }
-          grep -iq "deny" "secrets/.htaccess" || { echo "ERROR: secrets/.htaccess must deny all access!"; exit 1; }
+          # Ensure no production .env file exists in repository root
+          if [ -f ".env" ] || [ -f "buniafrika.env" ]; then
+            echo "ERROR: Found .env file in repository root! Production secrets must remain on the host server and never be committed to Git."
+            exit 1
+          fi
 
-          echo "Secrets isolation verified."
+          echo "Secrets isolation verified (no sensitive credential files in repository checkout)."
 
       - name: Lint PHP Files (Frontend & Backend)
         run: |
@@ -64,6 +65,30 @@ jobs:
           echo "=== Validating JavaScript Syntax ==="
           find buniafrika/ -name "*.js" -exec node -c {} +
 
+      - name: Setup Temporary CI Environment Configuration
+        run: |
+          echo "=== Setting Up Temporary CI Environment Configuration ==="
+          # Create temporary secrets directory with safe dummy credentials for CI bootstrap verification
+          # Note: 'secrets' is in .gitignore and excluded from deployment rsync
+          mkdir -p secrets
+          cat << 'EOF' > secrets/buniafrika.env
+          # Temporary CI dummy configuration (safe non-production values)
+          DB_HOST=127.0.0.1
+          DB_USER=ci_dummy_user
+          DB_PASS=ci_dummy_password
+          DB_NAME=ci_dummy_buniafrika
+          DB_PORT=3306
+          BACKEND_API_URL=https://buniafrika.co.ke
+          FRONTEND_URL=https://buniafrika.co.ke
+          SMTP_HOST=mail.buniafrika.co.ke
+          SMTP_PORT=465
+          SMTP_USERNAME=ci@buniafrika.co.ke
+          SMTP_PASSWORD=ci_dummy_smtp_pass
+          SMTP_FROM=ci@buniafrika.co.ke
+          EOF
+          chmod 600 secrets/buniafrika.env
+          echo "Temporary CI environment configuration created successfully."
+
       - name: Verify Environment Loader & Backend Dependencies
         run: |
           echo "=== Testing Environment Loading and Backend Bootstrap ==="
@@ -74,7 +99,11 @@ jobs:
                 exit(1);
             }
             if (empty($_ENV["DB_NAME"])) {
-                echo "FAIL: DB_NAME was not loaded from secrets/.env\n";
+                echo "FAIL: DB_NAME was not loaded from environment configuration\n";
+                exit(1);
+            }
+            if ($_ENV["DB_NAME"] !== "ci_dummy_buniafrika") {
+                echo "FAIL: Unexpected DB_NAME: " . $_ENV["DB_NAME"] . "\n";
                 exit(1);
             }
             echo "SUCCESS: Bootstrap loaded DB_NAME: " . $_ENV["DB_NAME"] . "\n";
@@ -93,8 +122,19 @@ jobs:
                 echo "FAIL: DB_NAME was not loaded via frontend bridge\n";
                 exit(1);
             }
+            if ($_ENV["DB_NAME"] !== "ci_dummy_buniafrika") {
+                echo "FAIL: Unexpected DB_NAME via frontend bridge: " . $_ENV["DB_NAME"] . "\n";
+                exit(1);
+            }
             echo "SUCCESS: Frontend bridge resolved DB_NAME: " . $_ENV["DB_NAME"] . "\n";
           '
+
+      - name: Cleanup Temporary CI Environment
+        if: always()
+        run: |
+          echo "=== Cleaning Up Temporary CI Environment ==="
+          rm -rf secrets
+          echo "Temporary CI environment removed."
 
   deploy:
     name: Deploy to SavanaHost (SSH Unified Directory)
@@ -192,6 +232,8 @@ jobs:
             --exclude 'secrets' \
             --exclude 'secrets/**' \
             --exclude '.env*' \
+            --exclude '*.env*' \
+            --exclude 'buniafrika.env' \
             --exclude '*.sql' \
             --exclude '*.log' \
             --exclude 'error_log' \

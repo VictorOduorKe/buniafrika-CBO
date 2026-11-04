@@ -1,14 +1,47 @@
 <?php
 
+// Prevent duplicate bootstrap execution
+if (defined('BUNIAFRIKA_BOOTSTRAPPED')) {
+    return;
+}
+
+if (!function_exists('handleBuniafrikaConfigError')) {
+    /**
+     * Halts execution with a clear error without exposing credentials or internal paths.
+     *
+     * @param string $logMessage Technical message for error log / CLI.
+     */
+    function handleBuniafrikaConfigError($logMessage) {
+        if (PHP_SAPI === 'cli') {
+            fwrite(STDERR, "[Buniafrika Config Error] " . $logMessage . "\n");
+        } else {
+            error_log("[Buniafrika Config Error] " . $logMessage);
+            if (!headers_sent()) {
+                http_response_code(500);
+            }
+            exit('The website is temporarily unavailable. Please try again later.');
+        }
+        exit(1);
+    }
+}
+
 if (!function_exists('loadEnv')) {
-    function loadEnv($path) {
-        if (!file_exists($path) || !is_readable($path)) {
-            return;
+    /**
+     * Loads key-value pairs from an environment file into $_ENV, $_SERVER, and putenv().
+     * Does not overwrite existing environment variables unless $overwrite is true.
+     *
+     * @param string $path Absolute file path.
+     * @param bool $overwrite Whether to overwrite existing variables (default: false).
+     * @return bool True on success, false on failure.
+     */
+    function loadEnv($path, $overwrite = false) {
+        if (!is_string($path) || $path === '' || !file_exists($path) || !is_readable($path)) {
+            return false;
         }
 
         $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         if ($lines === false) {
-            return;
+            return false;
         }
 
         foreach ($lines as $line) {
@@ -18,20 +51,33 @@ if (!function_exists('loadEnv')) {
                 continue;
             }
 
+            if (!str_contains($line, '=')) {
+                continue;
+            }
+
             [$key, $value] = explode('=', $line, 2);
             $key = trim($key);
             $value = trim($value);
 
-            // Strip surrounding single or double quotes if present
+            // Strip surrounding single or double quotes
             if ((str_starts_with($value, '"') && str_ends_with($value, '"')) ||
                 (str_starts_with($value, "'") && str_ends_with($value, "'"))) {
                 $value = substr($value, 1, -1);
             }
 
-            $_ENV[$key] = $value;
-            $_SERVER[$key] = $value;
-            putenv("{$key}={$value}");
+            // Do not unexpectedly overwrite existing environment variables
+            if ($overwrite || !array_key_exists($key, $_ENV)) {
+                $_ENV[$key] = $value;
+            }
+            if ($overwrite || !array_key_exists($key, $_SERVER)) {
+                $_SERVER[$key] = $value;
+            }
+            if ($overwrite || getenv($key) === false) {
+                putenv("{$key}={$value}");
+            }
         }
+
+        return true;
     }
 }
 
@@ -72,67 +118,72 @@ if (!defined('BUNIAFRIKA_PRIVATE_DIR')) {
     if ($envDir && is_dir($envDir)) {
         define('BUNIAFRIKA_PRIVATE_DIR', rtrim($envDir, '/\\'));
     } elseif (in_array(basename(dirname(__DIR__)), ['buniafrika.co.ke', 'ubuniafrika.co.ke'], true)) {
-        // When bootstrap.php is located inside /home/ACCOUNT/buniafrika-files/buniafrika/buniafrika.co.ke/includes/
         define('BUNIAFRIKA_PRIVATE_DIR', dirname(__DIR__));
     } elseif (is_dir(dirname(__DIR__, 2) . '/buniafrika.co.ke')) {
-        // Unified cPanel deployment: /buniafrika/buniafrika/includes -> /buniafrika/buniafrika.co.ke
         define('BUNIAFRIKA_PRIVATE_DIR', dirname(__DIR__, 2) . '/buniafrika.co.ke');
     } elseif (is_dir(dirname(__DIR__, 3) . '/buniafrika.co.ke')) {
         define('BUNIAFRIKA_PRIVATE_DIR', dirname(__DIR__, 3) . '/buniafrika.co.ke');
     } elseif (is_dir(dirname(__DIR__) . '/buniafrika.co.ke')) {
         define('BUNIAFRIKA_PRIVATE_DIR', dirname(__DIR__) . '/buniafrika.co.ke');
     } else {
-        // Local development repository root fallback
         define('BUNIAFRIKA_PRIVATE_DIR', dirname(__DIR__));
     }
 }
 
-// Load environment configuration (.env) prioritizing dedicated secrets folder
-// Production target: /home/ACCOUNT/buniafrika-files/secrets/.env
-$envCandidates = [];
+// -----------------------------------------------------------------------------
+// Deterministic Buniafrika Environment Loader
+// Exclusively loads: buniafrika.env
+// Never falls back to .env or other applications (portfolio.env, beekay.env, etc.)
+// -----------------------------------------------------------------------------
+$resolvedEnvFile = null;
 
-// 1. Explicit environment variable override
-$customEnv = getenv('BUNIAFRIKA_ENV_FILE') ?: getenv('ENV_FILE');
-if ($customEnv) {
-    $envCandidates[] = $customEnv;
+// 1. Explicit BUNIAFRIKA_ENV_FILE override (cannot silently fall back if invalid)
+$customEnv = getenv('BUNIAFRIKA_ENV_FILE');
+if (!empty($customEnv)) {
+    if (!file_exists($customEnv) || !is_readable($customEnv)) {
+        handleBuniafrikaConfigError('Specified BUNIAFRIKA_ENV_FILE does not exist or is unreadable: ' . basename($customEnv));
+    }
+    $resolvedEnvFile = $customEnv;
 }
 
-// 2. Relative to BUNIAFRIKA_PRIVATE_DIR (buniafrika/buniafrika.co.ke -> secrets/)
-$envCandidates[] = dirname(BUNIAFRIKA_PRIVATE_DIR, 2) . '/secrets/buniafrika.env';
-$envCandidates[] = dirname(BUNIAFRIKA_PRIVATE_DIR, 2) . '/secrets/.env';
+// 2. Deterministic location search for buniafrika.env
+if ($resolvedEnvFile === null) {
+    // 2a. Check cPanel home root directory (/home/CPANEL_USERNAME/secrets/buniafrika.env)
+    if (preg_match('#^(/home\d*/[^/]+)#', BUNIAFRIKA_PRIVATE_DIR, $cpanelMatch)) {
+        $cpanelSecrets = $cpanelMatch[1] . '/secrets/buniafrika.env';
+        if (file_exists($cpanelSecrets) && is_readable($cpanelSecrets)) {
+            $resolvedEnvFile = $cpanelSecrets;
+        }
+    }
 
-// 3. Relative to current file (__DIR__ is .../buniafrika.co.ke/includes -> .../secrets/)
-$envCandidates[] = dirname(__DIR__, 3) . '/secrets/buniafrika.env';
-$envCandidates[] = dirname(__DIR__, 3) . '/secrets/.env';
-
-// 4. cPanel home pattern detection (/home/ACCOUNT/secrets/...)
-if (preg_match('#^(/home/[^/]+)#', __DIR__, $matches)) {
-    $envCandidates[] = $matches[1] . '/secrets/buniafrika.env';
-    $envCandidates[] = $matches[1] . '/secrets/.env';
-    $envCandidates[] = $matches[1] . '/buniafrika-files/secrets/buniafrika.env';
-    $envCandidates[] = $matches[1] . '/buniafrika-files/secrets/.env';
-}
-
-// 5. Fallback relative and sibling locations
-$envCandidates[] = dirname(BUNIAFRIKA_PRIVATE_DIR) . '/secrets/buniafrika.env';
-$envCandidates[] = dirname(BUNIAFRIKA_PRIVATE_DIR) . '/secrets/.env';
-$envCandidates[] = dirname(__DIR__, 2) . '/secrets/buniafrika.env';
-$envCandidates[] = dirname(__DIR__, 2) . '/secrets/.env';
-$envCandidates[] = dirname(__DIR__, 4) . '/secrets/buniafrika.env';
-$envCandidates[] = dirname(__DIR__, 4) . '/secrets/.env';
-$envCandidates[] = BUNIAFRIKA_PRIVATE_DIR . '/secrets/buniafrika.env';
-$envCandidates[] = BUNIAFRIKA_PRIVATE_DIR . '/secrets/.env';
-$envCandidates[] = BUNIAFRIKA_PRIVATE_DIR . '/buniafrika.env';
-$envCandidates[] = BUNIAFRIKA_PRIVATE_DIR . '/.env';
-$envCandidates[] = __DIR__ . '/../../secrets/buniafrika.env';
-$envCandidates[] = __DIR__ . '/../../secrets/.env';
-$envCandidates[] = __DIR__ . '/../secrets/buniafrika.env';
-$envCandidates[] = __DIR__ . '/../secrets/.env';
-$envCandidates[] = __DIR__ . '/../.env';
-
-foreach ($envCandidates as $envCandidate) {
-    if (!empty($envCandidate) && file_exists($envCandidate)) {
-        loadEnv($envCandidate);
-        break;
+    // 2b. If not found in cPanel home root, traverse parent directories from BUNIAFRIKA_PRIVATE_DIR
+    // Looking strictly for secrets/buniafrika.env without assuming fixed directory depth
+    if ($resolvedEnvFile === null) {
+        $searchDir = BUNIAFRIKA_PRIVATE_DIR;
+        while ($searchDir && $searchDir !== '/' && dirname($searchDir) !== $searchDir) {
+            $candidate = $searchDir . '/secrets/buniafrika.env';
+            if (file_exists($candidate) && is_readable($candidate)) {
+                $resolvedEnvFile = $candidate;
+                break;
+            }
+            $searchDir = dirname($searchDir);
+        }
     }
 }
+
+// 3. Ensure configuration file was resolved
+if ($resolvedEnvFile === null || !file_exists($resolvedEnvFile) || !is_readable($resolvedEnvFile)) {
+    handleBuniafrikaConfigError('Dedicated configuration file (buniafrika.env) was not found or is unreadable.');
+}
+
+// 4. Load the configuration
+if (!loadEnv($resolvedEnvFile)) {
+    handleBuniafrikaConfigError('Failed to read or parse configuration file (buniafrika.env).');
+}
+
+// 5. Verify that required configuration is present and non-empty
+if (empty($_ENV['DB_NAME']) || empty($_ENV['BACKEND_API_URL'])) {
+    handleBuniafrikaConfigError('Incomplete configuration in buniafrika.env (missing required DB_NAME or BACKEND_API_URL).');
+}
+
+define('BUNIAFRIKA_BOOTSTRAPPED', true);

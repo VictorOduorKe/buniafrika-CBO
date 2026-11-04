@@ -16,11 +16,13 @@ On SavanaHost, the frontend and backend applications reside under a single unifi
 │   └── buniafrika.co.ke/                # Private Backend (API, business logic, DB connectors)
 │
 └── secrets/                             # Production Secrets (Outside public web roots)
-    └── buniafrika.env (or .env)         # Environment variables (DB credentials, SMTP, URLs)
+    ├── buniafrika.env                   # Buniafrika Environment variables (DB credentials, SMTP, URLs)
+    ├── portfolio.env                    # (Other apps share this directory safely)
+    └── .htaccess                        # Protects directory (Deny from all)
 ```
 
 > [!IMPORTANT]
-> **Secrets Isolation**: Production environment credentials (`secrets/buniafrika.env` or `secrets/.env`) must **never** be placed inside web-accessible directories or committed to Git. The deployment workflow automatically excludes `.env` and `secrets/` to prevent overwriting your live server configuration.
+> **Secrets Isolation**: Buniafrika exclusively loads `secrets/buniafrika.env`. It never falls back to `.env` or other applications' configuration files (`portfolio.env`, `beekay.env`, etc.). Environment credentials must **never** be placed inside web-accessible directories or committed to Git. The deployment workflow automatically excludes `buniafrika.env`, `.env*`, and `secrets/` to prevent overwriting your live server configuration.
 
 ---
 
@@ -108,7 +110,7 @@ Before initiating deployment, create your production secrets file on SavanaHost:
    chmod 700 /home/CPANEL_USERNAME/secrets
    ```
 
-2. Create `/home/CPANEL_USERNAME/secrets/buniafrika.env` (or `.env`):
+2. Create `/home/CPANEL_USERNAME/secrets/buniafrika.env`:
    ```ini
    # Database Configuration (MySQL / MariaDB on SavanaHost)
    DB_HOST=localhost
