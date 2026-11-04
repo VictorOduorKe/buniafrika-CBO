@@ -1,0 +1,107 @@
+<html>
+<head>
+<title>Redirect to login page</title>
+<meta HTTP-EQUIV='Pragma' CONTENT='no-cache'>
+
+<style>
+body {
+  margin: 10px 60px 0 60px; 
+  font-family : bitstream vera sans, sans-serif;
+  color: #46a43a;
+}
+
+a {
+  color: #46a43a;
+}
+
+a:active {
+  color: #46a43a;
+}
+
+a:link {
+  color: #46a43a;
+}
+
+a:visited {
+  color: #46a43a;
+}
+
+#header {
+  height: 30px;
+  background-color: #B4F663;
+  padding: 20px;
+  font-size: 20pt;
+  text-align: center;
+  border: 2px solid #46a43a;
+  border-bottom: 0;
+}
+
+#header h2 {
+  margin: 0pt;
+}
+
+#menu {
+  width: 200px;
+  float: right;
+  background-color: #B4F663;
+  border: 2px solid #46a43a;
+  font-size: 80%;
+  min-height: 300px;
+}
+
+#menu h2 {
+  margin: 0;
+  background-color: #46a43a;
+  text-align: center;
+  color: #B4F663;
+}
+
+#copyright {
+}
+
+#content {
+  padding: 20px;
+  border: 2px solid #46a43a;
+  min-height: 300px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="header">
+    <h2>Redirect to login page</h2>
+</div>
+
+<div id="menu">
+
+
+    <h2>Info</h2>
+    <ul>
+    <li>Version: 1.2.1
+
+    <li>Node ID: v2011
+    </ul>
+    <br>
+
+    <h2>Menu</h2>
+    <ul>
+    <li><a href='/wifidog/status'>WiFiDog Status</a>
+    <li><a href='/wifidog/about'>About WiFiDog</a>
+    <li><a href='http://www.wifidog.org'>WiFiDog's homepage</a>
+    </ul>
+</div>
+
+<div id="content">
+<h2>Please <a href='http://ac.tpauth.cn:8080/wportal/?interface_mode=true&pagetype=remote&wired_auth=true&interface=v2011&staIp=10.11.0.213&staMac=2E:F1:81:35:EC:50&url=http%3A%2F%2Fypl.laptotech.co.ke%2Fimages%2FYPL%2520logo.jpeghttp://ypl.laptotech.co.ke/images/YPL%20logo.jpeg'>click here</a>.</h2>
+</div>
+
+<div id="copyright">
+Copyright (C) 2004-2015.  This software is released under the GNU GPL license.
+</div>
+
+
+</body>
+</html>
+

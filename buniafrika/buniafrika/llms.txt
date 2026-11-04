@@ -1,0 +1,30 @@
+# BuniAfrika CBO
+
+> BuniAfrika CBO is a non-governmental community-based organization headquartered in Mombasa, Kenya, bridging research, civic technology, and cultural heritage preservation.
+
+## Core Mandate & Focus Areas
+- **CivicTech Awareness**: Educating communities on civic technologies, digital accountability, transparency, digital rights, and open governance.
+- **Culture and Heritage**: Preserving African cultural identity, oral traditions, community histories, and indigenous knowledge through community documentation.
+- **Evidence-Based Civic Action**: Translating rigorous grassroots research and policy analysis into actionable community advocacy.
+
+## Key Resources & Pages
+- [About BuniAfrika](https://buniafrika.co.ke/about.php): Background, history, core values, leadership team, and operational partners.
+- [Vision & Mission](https://buniafrika.co.ke/mission-vision.php): Strategic vision, mission statement, and institutional objectives.
+- [Programmes & Thematic Areas](https://buniafrika.co.ke/programmes.php): Detailed breakdown of civic tech, heritage initiatives, and community FAQs.
+- [Publications & Research](https://buniafrika.co.ke/publications.php): Policy briefs, research papers, baseline reports, and annual publications.
+- [Volunteer & Fellowship Opportunities](https://buniafrika.co.ke/volunteer.php): Community fellowships, volunteer tracks, and application portal.
+- [Contact & Offices](https://buniafrika.co.ke/contact.php): Headquarters location in Mombasa, Kenya, official emails, and communication channels.
+
+## Leadership
+- **Kennedy Muuo**: Chief Executive Officer
+- **Rahma Kassim**: Civic Tech & Public Advocacy
+- **Brodox George**: Programmes
+- **Victor Oduor**: Technical Infrastructure
+
+## Official Contact Information
+- **Location**: Mombasa & Coastal Region, Kenya
+- **General Inquiries**: info@buniafrika.co.ke
+- **Partnerships**: partnerships@buniafrika.co.ke
+- **Finance & Compliance**: finance@buniafrika.co.ke
+- **Telephone**: +254 700 000 000
+- **Website**: https://buniafrika.co.ke

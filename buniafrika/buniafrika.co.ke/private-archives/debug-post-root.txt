@@ -1,0 +1,40 @@
+Array
+(
+    [POST] => Array
+        (
+            [csrf_token] => c7deb4f33bd97ed001bd9f46dd9a2f6c5cea2e8f4e083341cbcc4a3e905f284a
+            [action] => gallery_add
+            [title] => YPL LOGO
+            [category] => __other__
+            [category_custom] => Our Identity
+            [caption] => Our Logo Represents Our Identity
+            [media_type] => image
+            [image_url] => 
+            [video_url] => 
+        )
+
+    [FILES] => Array
+        (
+            [image_file] => Array
+                (
+                    [name] => YPL logo.jpeg
+                    [full_path] => YPL logo.jpeg
+                    [type] => image/jpeg
+                    [tmp_name] => /tmp/phpqG4ORd
+                    [error] => 0
+                    [size] => 79237
+                )
+
+            [video_file] => Array
+                (
+                    [name] => 
+                    [full_path] => 
+                    [type] => 
+                    [tmp_name] => 
+                    [error] => 4
+                    [size] => 0
+                )
+
+        )
+
+)

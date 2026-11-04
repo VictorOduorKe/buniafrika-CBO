@@ -1,0 +1,25 @@
+# BuniAfrika Backend Root .htaccess
+# Protect internal non-public backend directories
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Prevent direct access to private backend directories
+    RewriteRule ^(includes|database|logs|private-archives|PHPMailer)/ - [F,L]
+
+    # If backend root is configured as document root, route traffic into public/
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Protect sensitive file extensions
+<FilesMatch "^\.env|\.env\.|\.ini$|\.log$|\.sql$|composer\.(json|lock)$">
+    Require all denied
+</FilesMatch>
+
+# Deny access to hidden dotfiles
+<Files ".*">
+    Require all denied
+</Files>
+

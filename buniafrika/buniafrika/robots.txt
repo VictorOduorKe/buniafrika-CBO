@@ -1,0 +1,54 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /database/
+Disallow: /.env
+Disallow: /process_contact.php
+Disallow: /process_donation.php
+Disallow: /process_newsletter.php
+Disallow: /process_registration.php
+Disallow: /login.php
+Disallow: /logout.php
+Disallow: /register.php
+Disallow: /reset_password.php
+Disallow: /submit_article.php
+
+# Permit media and document uploads for image & document search indexing
+Allow: /assets/uploads/
+Allow: /assets/images/
+Allow: /assets/css/
+Allow: /assets/js/
+
+# Major AI search and answer engine crawlers
+User-agent: GPTBot
+Allow: /
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /login.php
+Disallow: /register.php
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /login.php
+Disallow: /register.php
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /login.php
+Disallow: /register.php
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /login.php
+Disallow: /register.php
+
+# Sitemaps
+Sitemap: https://buniafrika.co.ke/sitemap.xml
+Sitemap: https://buniafrika.co.ke/sitemap.php

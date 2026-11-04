@@ -1,0 +1,26 @@
+# Turn off script engines if supported
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+# Force default-handler to prevent execution of any scripts
+SetHandler default-handler
+
+# Disable CGI execution and directory listings
+Options -ExecCGI -Indexes
+
+# Whitelist allowed media extensions; deny everything else
+<FilesMatch "\.(?i:jpe?g|png|gif|webp|svg|ico|mp4|webm|ogv|mov)$">
+    Require all granted
+</FilesMatch>
+
+# Specifically deny all script and config extensions
+<FilesMatch "(?i:\.(php[0-9]?|phtml|phar|pl|py|cgi|sh|bash|exe|dll|asp|aspx|shtml|env|ini|sql|log)|\.htaccess)$">
+    Require all denied
+</FilesMatch>

@@ -1,0 +1,40 @@
+Array
+(
+    [POST] => Array
+        (
+            [csrf_token] => 64b5b2b8cad28595dc82c11d9ca4723e7eaf4a1f4d79e11cd0371b3475aa351e
+            [action] => gallery_edit
+            [title] => Celebrating Samburu Cultural Heritage
+            [category] => __other__
+            [category_custom] => Culture & Heritage
+            [caption] => Our Media Director proudly showcases the rich Samburu cultural heritage through traditional attire, celebrating Kenya's diverse communities and promoting cultural appreciation, identity, and unity.
+            [media_type] => image
+            [image_url] => assets/uploads/gallery/resized_a2164dde190d08a6c423a3db3e6831d1.webp
+            [video_url] => 
+        )
+
+    [FILES] => Array
+        (
+            [image_file] => Array
+                (
+                    [name] => 
+                    [full_path] => 
+                    [type] => 
+                    [tmp_name] => 
+                    [error] => 4
+                    [size] => 0
+                )
+
+            [video_file] => Array
+                (
+                    [name] => 
+                    [full_path] => 
+                    [type] => 
+                    [tmp_name] => 
+                    [error] => 4
+                    [size] => 0
+                )
+
+        )
+
+)

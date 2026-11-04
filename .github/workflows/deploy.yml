@@ -1,0 +1,207 @@
+name: Deploy Buniafrika to SavanaHost (SSH)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  validate-and-build:
+    name: Validate and Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mysqli, curl, json, mbstring, gd, fileinfo
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify Target Directory Structure
+        run: |
+          echo "=== Verifying Target Directory Structure ==="
+          test -d "buniafrika/buniafrika" || { echo "ERROR: Frontend directory buniafrika/buniafrika missing!"; exit 1; }
+          test -d "buniafrika/buniafrika.co.ke" || { echo "ERROR: Backend directory buniafrika/buniafrika.co.ke missing!"; exit 1; }
+          test -d "secrets" || { echo "ERROR: Secrets directory secrets/ missing!"; exit 1; }
+          echo "Directory structure verified successfully."
+
+      - name: Security Check - Ensure No Secrets in Web Roots
+        run: |
+          echo "=== Security Check: Secrets Isolation ==="
+          # Ensure no .env file exists in frontend or backend
+          if find buniafrika/ -name ".env*" | grep -q .; then
+            echo "ERROR: Found .env file inside buniafrika/ directory! Sensitive files must reside only in secrets/"
+            find buniafrika/ -name ".env*"
+            exit 1
+          fi
+
+          # Ensure secrets directory is protected with .htaccess
+          test -f "secrets/.htaccess" || { echo "ERROR: secrets/.htaccess is missing!"; exit 1; }
+          grep -iq "deny" "secrets/.htaccess" || { echo "ERROR: secrets/.htaccess must deny all access!"; exit 1; }
+
+          echo "Secrets isolation verified."
+
+      - name: Lint PHP Files (Frontend & Backend)
+        run: |
+          echo "=== Linting PHP Files ==="
+          find buniafrika/ -name "*.php" -exec php -l {} +
+
+      - name: Validate JavaScript Syntax
+        run: |
+          echo "=== Validating JavaScript Syntax ==="
+          find buniafrika/ -name "*.js" -exec node -c {} +
+
+      - name: Verify Environment Loader & Backend Dependencies
+        run: |
+          echo "=== Testing Environment Loading and Backend Bootstrap ==="
+          php -r '
+            require_once "buniafrika/buniafrika.co.ke/includes/bootstrap.php";
+            if (!defined("BUNIAFRIKA_PRIVATE_DIR")) {
+                echo "FAIL: BUNIAFRIKA_PRIVATE_DIR not defined\n";
+                exit(1);
+            }
+            if (empty($_ENV["DB_NAME"])) {
+                echo "FAIL: DB_NAME was not loaded from secrets/.env\n";
+                exit(1);
+            }
+            echo "SUCCESS: Bootstrap loaded DB_NAME: " . $_ENV["DB_NAME"] . "\n";
+          '
+
+      - name: Verify Frontend Bootstrap Bridge
+        run: |
+          echo "=== Testing Frontend to Backend Bootstrap Bridge ==="
+          php -r '
+            require_once "buniafrika/buniafrika/includes/bootstrap.php";
+            if (!defined("BUNIAFRIKA_PRIVATE_DIR")) {
+                echo "FAIL: BUNIAFRIKA_PRIVATE_DIR not defined via frontend\n";
+                exit(1);
+            }
+            if (empty($_ENV["DB_NAME"])) {
+                echo "FAIL: DB_NAME was not loaded via frontend bridge\n";
+                exit(1);
+            }
+            echo "SUCCESS: Frontend bridge resolved DB_NAME: " . $_ENV["DB_NAME"] . "\n";
+          '
+
+  deploy:
+    name: Deploy to SavanaHost (SSH Unified Directory)
+    needs: validate-and-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Validate Deployment Configuration Secrets
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_DEPLOY_PATH: ${{ secrets.SSH_DEPLOY_PATH }}
+        run: |
+          echo "=== Validating Required SSH Deployment Secrets ==="
+          MISSING=0
+          if [ -z "$SSH_HOST" ]; then
+            echo "::error::GitHub Secret SSH_HOST is missing!"
+            MISSING=1
+          fi
+          if [ -z "$SSH_USERNAME" ]; then
+            echo "::error::GitHub Secret SSH_USERNAME is missing!"
+            MISSING=1
+          fi
+          if [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "::error::GitHub Secret SSH_PRIVATE_KEY is missing!"
+            MISSING=1
+          fi
+          if [ -z "$SSH_DEPLOY_PATH" ]; then
+            echo "::error::GitHub Secret SSH_DEPLOY_PATH is missing!"
+            MISSING=1
+          fi
+          if [ $MISSING -eq 1 ]; then
+            echo "Deployment halted: Please configure all required SSH secrets in your GitHub repository settings."
+            exit 1
+          fi
+          echo "All required SSH deployment secrets are present."
+
+      - name: Configure SSH Client
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          echo "=== Configuring SSH Client ==="
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          # Save private key securely with strict user-only read permissions
+          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Fetch remote host key to prevent interactive prompts
+          ssh-keyscan -p "${SSH_PORT:-22}" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          chmod 644 ~/.ssh/known_hosts
+          echo "SSH client configured successfully."
+
+      - name: Ensure Remote Unified Directory Exists
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
+          SSH_DEPLOY_PATH: ${{ secrets.SSH_DEPLOY_PATH }}
+        run: |
+          echo "=== Verifying Remote Target Directory on SavanaHost ==="
+          TARGET_DIR="${SSH_DEPLOY_PATH%/}"
+          ssh -i ~/.ssh/deploy_key -p "${SSH_PORT:-22}" -o StrictHostKeyChecking=accept-new "$SSH_USERNAME@$SSH_HOST" "mkdir -p '$TARGET_DIR'"
+          echo "Remote destination directory confirmed: $TARGET_DIR"
+
+      - name: Deploy Frontend and Backend via Rsync over SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
+          SSH_DEPLOY_PATH: ${{ secrets.SSH_DEPLOY_PATH }}
+        run: |
+          echo "=== Deploying Unified Application via Rsync over SSH ==="
+          TARGET_DIR="${SSH_DEPLOY_PATH%/}"
+
+          # Rsync synchronizes ./buniafrika/ (containing buniafrika/ and buniafrika.co.ke/)
+          # into the unified remote directory $TARGET_DIR/.
+          # Preserves nested structure:
+          #   $TARGET_DIR/buniafrika/        (Frontend)
+          #   $TARGET_DIR/buniafrika.co.ke/  (Backend)
+          # Note: Deletion flags are omitted, preserving user uploads (assets/uploads/), logs, and existing server files.
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key -p ${SSH_PORT:-22} -o StrictHostKeyChecking=accept-new" \
+            --exclude '.git*' \
+            --exclude '.github*' \
+            --exclude 'node_modules' \
+            --exclude 'secrets' \
+            --exclude 'secrets/**' \
+            --exclude '.env*' \
+            --exclude '*.sql' \
+            --exclude '*.log' \
+            --exclude 'error_log' \
+            --exclude '**/logs/error_log' \
+            ./buniafrika/ "$SSH_USERNAME@$SSH_HOST:$TARGET_DIR/"
+
+          echo "Rsync transfer completed successfully."
+
+      - name: Securely Remove Temporary Deployment Credentials
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key
+          echo "Temporary deployment key removed from runner."

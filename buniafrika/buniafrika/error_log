@@ -1,0 +1,28 @@
+[21-Oct-2026 13:52:46 UTC] Organization site settings are unavailable; apply database/migrations/20261020_create_site_settings.sql.
+[21-Oct-2026 13:52:46 UTC] Organization site settings are unavailable; apply database/migrations/20261020_create_site_settings.sql.
+[21-Oct-2026 13:52:46 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'cloudkazico_buniafrika.projects' doesn't exist in /home/cloudkazico/buniafrika.co.ke/includes/functions.php:455
+Stack trace:
+#0 /home/cloudkazico/buniafrika.co.ke/includes/functions.php(455): mysqli->query()
+#1 /home/cloudkazico/public_html/buniafrika/index.php(6): getProjects()
+#2 {main}
+  thrown in /home/cloudkazico/buniafrika.co.ke/includes/functions.php on line 455
+[21-Oct-2026 13:52:46 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'cloudkazico_buniafrika.projects' doesn't exist in /home/cloudkazico/buniafrika.co.ke/includes/functions.php:455
+Stack trace:
+#0 /home/cloudkazico/buniafrika.co.ke/includes/functions.php(455): mysqli->query()
+#1 /home/cloudkazico/public_html/buniafrika/index.php(6): getProjects()
+#2 {main}
+  thrown in /home/cloudkazico/buniafrika.co.ke/includes/functions.php on line 455
+[21-Oct-2026 13:53:07 UTC] Organization site settings are unavailable; apply database/migrations/20261020_create_site_settings.sql.
+[21-Oct-2026 13:53:07 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'cloudkazico_buniafrika.projects' doesn't exist in /home/cloudkazico/buniafrika.co.ke/includes/functions.php:455
+Stack trace:
+#0 /home/cloudkazico/buniafrika.co.ke/includes/functions.php(455): mysqli->query()
+#1 /home/cloudkazico/public_html/buniafrika/index.php(6): getProjects()
+#2 {main}
+  thrown in /home/cloudkazico/buniafrika.co.ke/includes/functions.php on line 455
+[21-Oct-2026 13:53:07 UTC] Organization site settings are unavailable; apply database/migrations/20261020_create_site_settings.sql.
+[21-Oct-2026 13:53:07 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'cloudkazico_buniafrika.projects' doesn't exist in /home/cloudkazico/buniafrika.co.ke/includes/functions.php:455
+Stack trace:
+#0 /home/cloudkazico/buniafrika.co.ke/includes/functions.php(455): mysqli->query()
+#1 /home/cloudkazico/public_html/buniafrika/index.php(6): getProjects()
+#2 {main}
+  thrown in /home/cloudkazico/buniafrika.co.ke/includes/functions.php on line 455

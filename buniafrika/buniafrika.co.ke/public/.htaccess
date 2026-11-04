@@ -1,0 +1,43 @@
+# BuniAfrika Backend API - Public Document Root .htaccess
+DirectoryIndex index.php
+
+# Prevent directory browsing
+Options -Indexes
+
+# Ensure HTTPS & clean API routing
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Route /api/* requests to api.php
+    RewriteRule ^api/(.*)$ api.php?endpoint=$1 [QSA,L]
+    RewriteRule ^api$ api.php [QSA,L]
+
+    # Route /download-publication to download-publication.php
+    RewriteRule ^download-publication$ download-publication.php [QSA,L]
+</IfModule>
+
+# Protect sensitive files and extensions
+<FilesMatch "^\.env|\.env\.|\.ini$|\.log$|\.sql$|composer\.(json|lock)$">
+    Require all denied
+</FilesMatch>
+
+# Deny access to hidden dotfiles
+<Files ".*">
+    Require all denied
+</Files>
+<FilesMatch "^\.(well-known)">
+    Require all granted
+</FilesMatch>
+
+# Allow normal public web API files
+<FilesMatch "\.(php|json|txt)$">
+    Require all granted
+</FilesMatch>
+
+# cPanel MultiPHP configuration handler if needed
+<IfModule mime_module>
+    AddHandler application/x-httpd-ea-php81 .php .php8 .phtml
+</IfModule>
+

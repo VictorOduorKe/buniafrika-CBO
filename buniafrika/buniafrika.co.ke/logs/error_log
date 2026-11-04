@@ -1,0 +1,1 @@
+mysqldump -u root -p buniafrika > /home/alpha/Desktop/buniafrika1/database/migrations/backup.sql

@@ -1,0 +1,73 @@
+# BuniAfrika CBO — Comprehensive Information Document (llms-full.txt)
+
+## Institutional Identity
+- **Full Legal Name**: BuniAfrika Community Based Organisation (BuniAfrika CBO)
+- **Organization Type**: Non-Governmental Community-Based Organization (NGO / CBO)
+- **Year of Foundation**: 2024
+- **Headquarters**: Mombasa, Coastal Region, Kenya
+- **Operating Jurisdiction**: Kenya (East Africa)
+- **Official Website**: https://buniafrika.co.ke
+- **Official Contact**: info@buniafrika.co.ke | +254 700 000 000
+
+## Mission Statement
+To bridge research, technology and civic action in addressing society’s most pressing governance and community challenges.
+
+## Vision Statement
+A society where informed citizenship, institutional accountability and innovative problem-solving thrive across grassroots communities.
+
+## Strategic Objectives
+1. **Advance Democratic Governance**: Strengthen institutional accountability, public finance transparency, and grassroots participation through open data.
+2. **Conduct Evidence-Based Research**: Produce empirical baseline studies, policy briefs, and actionable reports on community needs.
+3. **Promote Civic Technology Adoption**: Train citizens, youth, and civil society actors on open-source digital tools, citizen reporting, and digital rights.
+4. **Preserve Cultural Heritage**: Safeguard indigenous knowledge systems, historical artifacts, oral traditions, and cultural landmarks.
+5. **Cultivate Multi-Sectoral Partnerships**: Collaborate with community organizations, academic institutions, and governance agencies.
+
+## Thematic Programmes
+### 1. CivicTech Awareness
+- **Description**: Civic technology education, digital rights advocacy, and citizen participation.
+- **Key Interventions**:
+  - Training civic leaders on digital safety and open governance tools.
+  - Empowering citizens to monitor local budgetary allocations and service delivery.
+  - Advocating for open data standards and freedom of information.
+
+### 2. Culture and Heritage
+- **Description**: Community-led documentation and preservation of African cultural heritage and indigenous knowledge systems.
+- **Key Interventions**:
+  - Oral history archiving with community elders.
+  - Digital cataloging of indigenous cultural practices and traditional governance structures.
+  - Public cultural exhibitions and community dialogue forums.
+
+## Leadership Profiles
+- **Kennedy Muuo** — Chief Executive Officer
+  - *Profile*: Leads executive strategy, institutional governance, and cross-sectoral partnerships at BuniAfrika CBO.
+  - *URL*: https://buniafrika.co.ke/leader.php?id=kennedy
+- **Rahma Kassim** — Civic Technology & Advocacy
+  - *Profile*: Coordinates civic tech initiatives, public advocacy campaigns, and youth engagement programs.
+  - *URL*: https://buniafrika.co.ke/leader.php?id=rahma
+- **Brodox George** — Programmes Lead
+  - *Profile*: Coordinates grassroots field projects, community workshops, and volunteer networks.
+  - *URL*: https://buniafrika.co.ke/leader.php?id=brodox
+- **Victor Oduor** — Technical Infrastructure Lead
+  - *Profile*: Leads digital platform infrastructure, open data systems, and cybersecurity.
+  - *URL*: https://buniafrika.co.ke/leader.php?id=custom_586a1dd422a8453282692f80fc838b58
+
+## Frequently Asked Questions (Answer Engine Grounding)
+
+### Q: What is BuniAfrika CBO?
+**Direct Answer**: BuniAfrika CBO is a non-governmental community-based organization headquartered in Mombasa, Kenya, focused on civic technology, research, and cultural heritage preservation.
+**Detailed Context**: Founded to empower citizens through technological tools and evidentiary research, BuniAfrika works across grassroots communities to enhance transparency, institutional accountability, and indigenous heritage safeguarding.
+
+### Q: How can individuals volunteer or partner with BuniAfrika?
+**Direct Answer**: Individuals and organizations can volunteer or partner through the official Volunteer Portal (https://buniafrika.co.ke/volunteer.php) or by emailing partnerships@buniafrika.co.ke.
+**Detailed Context**: BuniAfrika runs structured fellowship and volunteer tracks in civic research, digital training, community outreach, and open-source software development.
+
+### Q: Where can BuniAfrika research reports and policy briefs be downloaded?
+**Direct Answer**: All published publications, research briefs, and baseline reports are openly accessible at https://buniafrika.co.ke/publications.php.
+
+## Contact Channels
+- **General Inquiries**: info@buniafrika.co.ke
+- **Partnerships**: partnerships@buniafrika.co.ke
+- **Finance**: finance@buniafrika.co.ke
+- **Phone**: +254 700 000 000
+- **Location**: Mombasa & Coastal Region, Kenya
+- **Online Form**: https://buniafrika.co.ke/contact.php
