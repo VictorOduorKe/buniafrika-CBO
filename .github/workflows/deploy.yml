@@ -220,9 +220,18 @@ jobs:
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          # Save private key securely with strict user-only read permissions
-          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          # Write multiline private key with normalized line endings and guaranteed trailing newline
+          # Uses printf instead of echo to prevent option/escape interpretation and preserve formatting
+          printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+
+          # Validate that private key is well-formed, readable by OpenSSL/libcrypto, and not passphrase-protected
+          # Note: -P "" supplies an empty passphrase to reject passphrase-protected keys non-interactively
+          if ! ssh-keygen -y -P "" -f ~/.ssh/deploy_key > /dev/null 2>&1; then
+            echo "::error::SSH_PRIVATE_KEY validation failed: The private key is malformed, incorrectly formatted, or passphrase-protected. Ensure the key was generated without a passphrase and pasted in its entirety (including BEGIN and END lines) into GitHub Secrets."
+            exit 1
+          fi
+          echo "SSH private key format validated successfully."
 
           # Fetch remote host key to prevent interactive prompts
           ssh-keyscan -p "${SSH_PORT:-22}" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
