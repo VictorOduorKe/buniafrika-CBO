@@ -4,10 +4,27 @@ DirectoryIndex index.php index.html
 # Prevent directory browsing
 Options -Indexes
 
-# Rewrite sitemap.xml to dynamic sitemap generator
+# URL Rewrites and Clean Routing
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Prevent direct HTTP access to internal include scripts
+    RewriteRule ^includes/ - [F,L]
+
+    # Rewrite sitemap.xml to dynamic sitemap generator
     RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+    # Clean API gateway routing for frontend API bridge
+    RewriteRule ^api/(.*)$ api.php?endpoint=$1 [QSA,L]
+    RewriteRule ^api$ api.php [QSA,L]
+
+    # Clean publication download routing
+    RewriteRule ^download-publication$ download-publication.php [QSA,L]
+
+    # Support extensionless PHP URLs (e.g. /about -> about.php)
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}\.php -f
+    RewriteRule ^([^\.]+)$ $1.php [NC,L]
 </IfModule>
 
 # Ensure MIME types for modern media formats
@@ -21,6 +38,7 @@ Options -Indexes
     AddType video/webm .webm
     AddType video/ogg .ogv
     AddType video/quicktime .mov
+    AddType application/pdf .pdf
 </IfModule>
 
 # Protect sensitive files and directories
@@ -37,7 +55,7 @@ Options -Indexes
 </FilesMatch>
 
 # Allow normal public web files
-<FilesMatch "\.(php|html|htm|css|js|png|jpg|jpeg|gif|webp|svg|ico|mp4|webm|ogv|mov|woff|woff2|ttf|eot|xml|txt)$">
+<FilesMatch "\.(php|html|htm|css|js|png|jpg|jpeg|gif|webp|svg|ico|mp4|webm|ogv|mov|woff|woff2|ttf|eot|xml|txt|pdf)$">
     Require all granted
 </FilesMatch>
 

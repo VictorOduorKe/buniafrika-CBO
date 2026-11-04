@@ -182,3 +182,61 @@ Every push to the `main` branch automatically:
 ### Uploaded Images or Data Missing
 - The workflow intentionally omits the `--delete` flag. User media uploaded to `buniafrika/assets/uploads/` is never deleted or overwritten during deployment.
 
+---
+
+## 9. Domain Document Root & Web Server Configuration
+
+To keep the entire Buniafrika project outside `public_html` (`/home/CPANEL_USERNAME/buniafrika_cbo/`) while serving `buniafrika.co.ke`:
+
+### Primary Method: Native DocumentRoot (Outside `public_html`)
+1. Log in to **cPanel**.
+2. Navigate to **Domains** (or **Addon Domains**).
+3. Find `buniafrika.co.ke` and click **Manage**.
+4. In the **Document Root** field, remove any `public_html/` prefix and set the path to:
+   ```text
+   buniafrika_cbo/buniafrika/buniafrika
+   ```
+5. Click **Update**.
+6. Apache / LiteSpeed will immediately serve the application directly from `/home/CPANEL_USERNAME/buniafrika_cbo/buniafrika/buniafrika/`.
+
+### Secondary Method: Controlled Symlink (If Host Enforces `public_html`)
+If SavanaHost prevents setting DocumentRoot outside `public_html` or if `buniafrika.co.ke` is the account's primary domain:
+1. Ensure the domain DocumentRoot is configured in cPanel as:
+   ```text
+   public_html/buniafrika
+   ```
+2. Open cPanel **Terminal** or connect via SSH, and create a symbolic link pointing strictly to the frontend public directory:
+   ```bash
+   ln -s /home/CPANEL_USERNAME/buniafrika_cbo/buniafrika/buniafrika /home/CPANEL_USERNAME/public_html/buniafrika
+   ```
+3. This exposes ONLY the public frontend while the backend (`buniafrika.co.ke/`), database, logs, and secrets (`secrets/buniafrika.env`) remain private and completely inaccessible from the web.
+
+---
+
+## 10. Required Filesystem Permissions
+
+Apply strict least-privilege permissions across the cPanel account:
+
+```bash
+# cPanel home directory
+chmod 755 /home/CPANEL_USERNAME
+
+# Secrets directory and file (STRICT PRIVATE)
+chmod 700 /home/CPANEL_USERNAME/secrets
+chmod 600 /home/CPANEL_USERNAME/secrets/buniafrika.env
+chmod 644 /home/CPANEL_USERNAME/secrets/.htaccess
+
+# Repository and application directories
+find /home/CPANEL_USERNAME/buniafrika_cbo -type d -exec chmod 755 {} +
+find /home/CPANEL_USERNAME/buniafrika_cbo -type f -exec chmod 644 {} +
+
+# Writable Uploads and Logs directories (PHP runs as cPanel user; 755 provides full write access)
+chmod 755 /home/CPANEL_USERNAME/buniafrika_cbo/buniafrika/buniafrika/assets/uploads
+find /home/CPANEL_USERNAME/buniafrika_cbo/buniafrika/buniafrika/assets/uploads -type d -exec chmod 755 {} +
+chmod 755 /home/CPANEL_USERNAME/buniafrika_cbo/buniafrika/buniafrika.co.ke/logs
+```
+
+> [!CAUTION]
+> **Never use `777` permissions.** On LiteSpeed and suPHP shared hosting environments like SavanaHost, world-writable directories (`777`) trigger security violations and cause HTTP 500 errors.
+
+

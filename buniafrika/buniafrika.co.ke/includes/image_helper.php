@@ -11,22 +11,16 @@ if (!function_exists('resolveUploadsBaseDir')) {
         $candidates = [
             $parent . '/buniafrika/assets/uploads',
             dirname(__DIR__, 2) . '/buniafrika/assets/uploads',
-            $parent . '/public_html/buniafrika/assets/uploads',
-            $parent . '/public_buniafrika/assets/uploads',
-            $parent . '/upublic_ubuniafrika/assets/uploads',
-            dirname(__DIR__, 2) . '/public_html/buniafrika/assets/uploads',
-            dirname(__DIR__, 2) . '/public_buniafrika/assets/uploads',
-            dirname(__DIR__, 3) . '/public_html/buniafrika/assets/uploads',
+            $parent . '/assets/uploads',
             dirname(__DIR__, 2) . '/assets/uploads',
             dirname(__DIR__) . '/assets/uploads',
-            __DIR__ . '/../../public_html/buniafrika/assets/uploads',
         ];
         foreach ($candidates as $cand) {
             if (is_dir($cand)) {
                 return $cand;
             }
         }
-        return dirname(__DIR__) . '/assets/uploads';
+        return $parent . '/buniafrika/assets/uploads';
     }
 }
 
